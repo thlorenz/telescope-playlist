@@ -11,37 +11,56 @@ local conf = require("telescope.config").values
 local entry_display = require("telescope.pickers.entry_display")
 local action_state = require("telescope.actions.state")
 
-local samples = {
-	{
-		name = "Super Tune",
-		value = "https://something",
-		category = "jazz",
-	},
-	{
-		name = "Even Better Tune",
-		value = "https://something-better",
-		category = "di",
-	},
-}
+local playlist = [[
+[playlist]
+NumberOfEntries=8
+File1=http://fr1.nexuscast.com:8004/juicestow
+Title1=Juice Stowmarket
+Length1=0
+File2=http://hoth.alonhosting.com:2480/stream
+Title2=Online Radio
+Length20
+File3=http://stream.hosting078.nl:8042/stream
+Title3=Radio Uniek Rotterdam
+Length3=0
+File4=http://wav.carbonwav.com:1200/stream
+Title4=Podcast
+Length4=0
+File5=http://wav.carbonwav.com:1150/stream
+Title5=Independent Music
+Length5=0
+File5=http://ec01.streaminghd.net.ar:1580/stream
+Title5=Online Radio
+Length5=0
+]]
+
+local function reload(pack)
+	package.loaded[pack] = nil
+	return require(pack)
+end
+
+local parser = reload("playlist.parser")
+local samples = parser.parse_pls(playlist)
+
 local function action(entry)
-	vim.notify(vim.inspect(entry))
+	vim.notify("Opening " .. entry.value)
 end
 
 local function search()
 	local displayer = entry_display.create({
 		separator = " ",
 		items = {
-			{ width = 40 },
-			{ width = 18 },
+			{ width = 30 },
+			{ width = 25 },
 			{ remaining = true },
 		},
 	})
 
 	local make_display = function(entry)
 		return displayer({
-			entry.value .. " " .. entry.name,
+			entry.name,
 			entry.category,
-			entry.description,
+			entry.value,
 		})
 	end
 
@@ -52,11 +71,11 @@ local function search()
 			results = samples,
 			entry_maker = function(entry)
 				return {
-					ordinal = entry.name .. entry.category,
+					ordinal = entry.title .. entry.category,
 					display = make_display,
 
-					name = entry.name,
-					value = entry.value,
+					name = entry.title,
+					value = entry.file,
 					category = entry.category,
 				}
 			end,
