@@ -3,7 +3,8 @@ local M = {}
 local status_ok, plenary = pcall(require, "plenary")
 if not status_ok then
 	vim.notify(
-		"Failed to load plenary which is required for the playlist plugin"
+		"Failed to load plenary which is required for the playlist plugin",
+		"error"
 	)
 	return
 end
@@ -40,7 +41,5 @@ end tell]]
 		})
 		:start()
 end
-
-M.open("http://hoth.alonhosting.com:2480/stream", true)
 
 return M

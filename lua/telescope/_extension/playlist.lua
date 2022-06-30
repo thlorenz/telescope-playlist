@@ -29,6 +29,9 @@ Length4=0
 File5=http://wav.carbonwav.com:1150/stream
 Title5=Independent Music
 Length5=0
+File5=https://listen.di.fm/premium_high/00sclubhits.pls?ds8932irop22df
+Title5=with token
+Length5=0
 File5=http://ec01.streaminghd.net.ar:1580/stream
 Title5=Online Radio
 Length5=0
@@ -40,10 +43,12 @@ local function reload(pack)
 end
 
 local parser = reload("playlist.parser")
+local vlc = reload("playlist.vlc")
 local samples = parser.parse_pls(playlist)
 
 local function action(entry)
-	vim.notify("Opening " .. entry.value)
+	vlc.open(entry.value)
+	vim.notify("Playlist: opening '" .. entry.name .. "'", "info")
 end
 
 local function search()
@@ -60,7 +65,7 @@ local function search()
 		return displayer({
 			entry.name,
 			entry.category,
-			entry.value,
+			parser.cut_token_from_url(entry.value),
 		})
 	end
 
