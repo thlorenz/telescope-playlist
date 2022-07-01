@@ -37,6 +37,8 @@ end tell]]
 				if return_val ~= 0 then
 					print("Opening in VLC failed " .. vim.inspect(j:result()))
 				end
+				-- TODO: delete if url starts with file://
+				-- os.remove(remaining)
 			end,
 		})
 		:start()
