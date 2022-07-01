@@ -4,15 +4,14 @@ local file_rx = "File%d+=(.+)$"
 local title_rx = "Title%d+=(.+)$"
 local token_url_rx = "(.+)?"
 
-function M.parse_pls(playlist, category)
+function M.parse_pls(lines, category)
 	category = category or "uncategorized"
 
-	local lines = playlist:gmatch("([^\n]*)\n?")
 	local current_file = nil
 	local entries = {}
 	local idx = 1
 
-	for line in lines do
+	for _, line in pairs(lines) do
 		local file = line:match(file_rx)
 		if file ~= nil then
 			current_file = file

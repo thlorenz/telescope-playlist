@@ -11,69 +11,49 @@ local conf = require("telescope.config").values
 local entry_display = require("telescope.pickers.entry_display")
 local action_state = require("telescope.actions.state")
 
-local playlist = [[
-[playlist]
-NumberOfEntries=8
-File1=http://fr1.nexuscast.com:8004/juicestow
-Title1=Juice Stowmarket
-Length1=0
-File2=http://hoth.alonhosting.com:2480/stream
-Title2=Online Radio
-Length20
-File3=http://stream.hosting078.nl:8042/stream
-Title3=Radio Uniek Rotterdam
-Length3=0
-File4=http://wav.carbonwav.com:1200/stream
-Title4=Podcast
-Length4=0
-File5=http://wav.carbonwav.com:1150/stream
-Title5=Independent Music
-Length5=0
-File5=https://listen.di.fm/premium_high/00sclubhits.pls?ds8932irop22df
-Title5=with token
-Length5=0
-File5=http://ec01.streaminghd.net.ar:1580/stream
-Title5=Online Radio
-Length5=0
-]]
+local loader = require("playlist.loader")
+local parser = require("playlist.parser")
+local vlc = require("playlist.vlc")
 
-local function reload(pack)
-	package.loaded[pack] = nil
-	return require(pack)
-end
-
-local parser = reload("playlist.parser")
-local vlc = reload("playlist.vlc")
-local samples = parser.parse_pls(playlist)
+local config = {}
 
 local function action(entry)
-	vlc.open(entry.value)
-	vim.notify("Playlist: opening '" .. entry.name .. "'", "info")
+	if entry ~= nil then
+		vlc.open(entry.value)
+		vim.notify("Playlist: opening '" .. entry.name .. "'", "info")
+	end
 end
 
+-- Loading playlist when the extension is used for the first time and then caching it
+local playlist = nil
 local function search()
 	local displayer = entry_display.create({
 		separator = " ",
 		items = {
 			{ width = 30 },
-			{ width = 25 },
+			{ width = 10 },
 			{ remaining = true },
 		},
 	})
 
 	local make_display = function(entry)
+		local value = parser.cut_token_from_url(entry.value)
 		return displayer({
 			entry.name,
 			entry.category,
-			parser.cut_token_from_url(entry.value),
+			value,
 		})
+	end
+
+	if not config.cache or playlist == nil then
+		playlist = loader.load(config.paths)
 	end
 
 	pickers.new(opts, {
 		prompt_title = "Playlist",
 		sorter = conf.generic_sorter(opts),
 		finder = finders.new_table({
-			results = samples,
+			results = playlist,
 			entry_maker = function(entry)
 				return {
 					ordinal = entry.title .. entry.category,
@@ -103,8 +83,16 @@ local function reload()
 	local manager = require("telescope._extensions").manager
 	manager.playlist = exports
 end
-reload()
+-- reload()
+
+local function set_config(opt_name, value, default)
+	config[opt_name] = value == nil and default or value
+end
 
 return telescope.register_extension({
+	setup = function(opts)
+		set_config("paths", opts.paths, {})
+		set_config("cache", opts.cache, true)
+	end,
 	exports = exports,
 })
